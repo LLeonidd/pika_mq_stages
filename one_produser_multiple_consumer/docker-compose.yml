@@ -1,0 +1,45 @@
+version: "3.2"
+services:
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: 'rabbitmq_stage'
+    ports:
+        - 5672:5672
+        - 15672:15672
+
+  publisher:
+      build:
+        context: .
+        dockerfile: PythonStageDockerfile
+      container_name: publisher_container
+      command: >
+        bash -c "sleep 10
+        && python publisher.py"
+      volumes:
+        - .:/home
+      depends_on:
+        - rabbitmq
+
+  consumer1:
+    build:
+      context: .
+      dockerfile: PythonStageDockerfile
+    container_name: consumer1
+    command: bash -c "python consumer.py 1"
+    restart: always
+    volumes:
+      - .:/home
+    depends_on:
+      - publisher
+
+  consumer2:
+    build:
+      context: .
+      dockerfile: PythonStageDockerfile
+    container_name: consumer2
+    command: bash -c "python consumer.py 2"
+    restart: always
+    volumes:
+      - .:/home
+    depends_on:
+      - publisher
